@@ -1,0 +1,60 @@
+register + login
+
+-----------POST----------------
+
+http://127.0.0.1:5000/users/register
+
+{
+  "username": "testuser",
+  "password": "senha123"
+}
+
+-------------------------------
+http://127.0.0.1:5000/users/login
+
+{
+  "username": "testuser",
+  "password": "senha123"
+}
+
+-----------GET----------------
+
+http://127.0.0.1:5000/users/me
+
+Authorization - type - Bearer Token Token exp: [colocar código gerado do login]
+
+
+-----------PUT----------------
+
+http://127.0.0.1:5000/users/me
+
+{
+  "username": "testuser",
+  "password": "senha123"
+}
+
+Authorization - type - Bearer Token Token exp: [colocar código gerado do login]
+
+-----------DELETE-------------
+
+http://127.0.0.1:5000/users/me
+
+Authorization - type - Bearer Token Token exp: [colocar código gerado do login]
+
+
+----------------FORMULARIO------------
+
+-----------POST----------------
+
+http://localhost:5000/formularios
+
+{
+    "nome": "João da Silva",
+    "email": "joao.silva@example.com",
+    "data_nascimento": "1990-01-01",
+    "cpf": "12345678900",
+    "genero": "Masculino"
+}
+
+Authorization - type - Bearer Token Token exp: [colocar código gerado do login]
+
