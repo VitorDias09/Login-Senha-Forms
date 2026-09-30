@@ -8,7 +8,9 @@ class UserModel:
         conn = get_db_connection()  
         user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
         conn.close()  
-        return user  
+        if user:
+            return dict(user)
+        return None  
 
     @staticmethod
     def find_by_id(user_id):
