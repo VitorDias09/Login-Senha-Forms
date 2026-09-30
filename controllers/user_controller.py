@@ -33,3 +33,45 @@ class UserController:
             return {"access_token": access_token}, 200  
 
         return {"error": "Nome de usuário ou senha inválidos"}, 401 
+
+    @staticmethod
+    def get_user_by_id(user_id):
+        user = UserModel.find_by_id(user_id)
+        if not user:
+            return {"error": "Usuário não encontrado"}, 404
+        return user, 200
+
+    @staticmethod
+    def update_user(user_id, data):
+        if not data:
+            return {"error": "Dados para atualização não fornecidos"}, 400
+
+        user = UserModel.find_by_id(user_id)
+        if not user:
+            return {"error": "Usuário não encontrado"}, 404
+
+        # Regra de segurança: Não permitir alteração direta de senha nesta rota
+        if 'password' in data:
+            return {"error": "Não é permitida a alteração direta de senha nesta rota"}, 400
+
+        username = data.get('username')
+        if not username or not str(username).strip():
+            return {"error": "Campo 'username' é obrigatório para atualização"}, 400
+
+        result = UserModel.update_user(user_id, str(username).strip())
+        if result is None:
+            return {"error": "Nome de usuário já existe"}, 400
+        
+        if result:
+            return {"message": "Usuário atualizado com sucesso"}, 200
+        return {"error": "Erro ao atualizar usuário"}, 500
+
+    @staticmethod
+    def delete_user(user_id):
+        user = UserModel.find_by_id(user_id)
+        if not user:
+            return {"error": "Usuário não encontrado"}, 404
+
+        if UserModel.delete_user(user_id):
+            return {"message": "Usuário excluído com sucesso"}, 200
+        return {"error": "Erro ao excluir usuário"}, 500

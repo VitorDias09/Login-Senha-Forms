@@ -1,60 +1,305 @@
-register + login
+====================================================================
+GUIA COMPLETO DE TESTES NO POSTMAN - API FLASK REST COM AUTENTICAÇÃO JWT
+====================================================================
 
------------POST----------------
+Como configurar o Token JWT no Postman:
+1. Realize a requisição de Login (item 2).
+2. Copie o valor do "access_token" retornado no corpo da resposta.
+3. Nas rotas protegidas:
+   - Vá na aba "Authorization" da requisição.
+   - Em "Type", selecione "Bearer Token".
+   - No campo "Token", cole o token copiado.
 
-http://127.0.0.1:5000/users/register
+Base URL: http://127.0.0.1:5000
 
+====================================================================
+1. FLUXO BÁSICO: CADASTRO E LOGIN
+====================================================================
+
+[POST] 1.1 Cadastrar Novo Usuário
+URL: http://127.0.0.1:5000/users/register
+Headers:
+  Content-Type: application/json
+Body (raw - JSON):
 {
-  "username": "testuser",
+  "username": "aluno_teste",
   "password": "senha123"
 }
-
--------------------------------
-http://127.0.0.1:5000/users/login
-
+Resposta esperada (201 Created):
 {
-  "username": "testuser",
-  "password": "senha123"
+  "message": "Usuário registrado com sucesso"
 }
 
------------GET----------------
+--------------------------------------------------------------------
 
-http://127.0.0.1:5000/users/me
-
-Authorization - type - Bearer Token Token exp: [colocar código gerado do login]
-
-
------------PUT----------------
-
-http://127.0.0.1:5000/users/me
-
+[POST] 1.2 Login de Usuário (Gerar Token JWT)
+URL: http://127.0.0.1:5000/users/login
+Headers:
+  Content-Type: application/json
+Body (raw - JSON):
 {
-  "username": "testuser",
+  "username": "aluno_teste",
   "password": "senha123"
 }
-
-Authorization - type - Bearer Token Token exp: [colocar código gerado do login]
-
------------DELETE-------------
-
-http://127.0.0.1:5000/users/me
-
-Authorization - type - Bearer Token Token exp: [colocar código gerado do login]
-
-
-----------------FORMULARIO------------
-
------------POST----------------
-
-http://localhost:5000/formularios
-
+Resposta esperada (200 OK):
 {
+  "access_token": "eyJhbGciOiJIUzI1NiIsIn..."
+}
+* COPIE O TOKEN GERADO PARA USAR NAS ROTAS ABAIXO *
+
+====================================================================
+2. OPERAÇÕES OBRIGATÓRIAS - USUÁRIOS
+====================================================================
+
+--- [GET] CONSULTAR USUÁRIO ---
+Rota: GET /users/<id>
+
+• Teste com Autenticação (Sucesso):
+  URL: http://127.0.0.1:5000/users/1
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+  Resposta esperada (200 OK):
+  {
+    "id": 1,
+    "username": "aluno_teste"
+  }
+  (Observação: A senha ou hash NUNCA é retornada)
+
+• Teste sem Autenticação (Bloqueio):
+  URL: http://127.0.0.1:5000/users/1
+  Headers: (Nenhum cabeçalho de autenticação)
+  Resposta esperada (401 Unauthorized):
+  {
+    "error": "Token de autenticação não fornecido"
+  }
+
+• Teste de Registro Inexistente:
+  URL: http://127.0.0.1:5000/users/999
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+  Resposta esperada (404 Not Found):
+  {
+    "error": "Usuário não encontrado"
+  }
+
+--- [PUT] ATUALIZAR USUÁRIO ---
+Rota: PUT /users/<id>
+
+• Teste com Autenticação (Sucesso):
+  URL: http://127.0.0.1:5000/users/1
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+    Content-Type: application/json
+  Body (raw - JSON):
+  {
+    "username": "aluno_atualizado"
+  }
+  Resposta esperada (200 OK):
+  {
+    "message": "Usuário atualizado com sucesso"
+  }
+
+• Teste sem Autenticação (Bloqueio):
+  URL: http://127.0.0.1:5000/users/1
+  Headers:
+    Content-Type: application/json
+  Body (raw - JSON):
+  {
+    "username": "teste_sem_token"
+  }
+  Resposta esperada (401 Unauthorized):
+  {
+    "error": "Token de autenticação não fornecido"
+  }
+
+• Teste de Registro Inexistente:
+  URL: http://127.0.0.1:5000/users/999
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+    Content-Type: application/json
+  Body (raw - JSON):
+  {
+    "username": "usuario_fantasma"
+  }
+  Resposta esperada (404 Not Found):
+  {
+    "error": "Usuário não encontrado"
+  }
+
+• Teste de Proteção de Senha (Segurança):
+  URL: http://127.0.0.1:5000/users/1
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+    Content-Type: application/json
+  Body (raw - JSON):
+  {
+    "password": "tentativa_alterar_senha_direta"
+  }
+  Resposta esperada (400 Bad Request):
+  {
+    "error": "Não é permitida a alteração direta de senha nesta rota"
+  }
+
+--- [DELETE] EXCLUIR USUÁRIO ---
+Rota: DELETE /users/<id>
+
+• Teste sem Autenticação (Bloqueio):
+  URL: http://127.0.0.1:5000/users/1
+  Headers: (Nenhum cabeçalho de autenticação)
+  Resposta esperada (401 Unauthorized):
+  {
+    "error": "Token de autenticação não fornecido"
+  }
+
+• Teste de Registro Inexistente:
+  URL: http://127.0.0.1:5000/users/999
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+  Resposta esperada (404 Not Found):
+  {
+    "error": "Usuário não encontrado"
+  }
+
+• Teste com Autenticação (Sucesso):
+  URL: http://127.0.0.1:5000/users/1
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+  Resposta esperada (200 OK):
+  {
+    "message": "Usuário excluído com sucesso"
+  }
+
+====================================================================
+3. OPERAÇÕES OBRIGATÓRIAS - FORMULÁRIOS
+====================================================================
+
+[POST] Cadastrar Formulário (Pré-requisito para testes de formulário)
+URL: http://127.0.0.1:5000/formularios
+Headers:
+  Authorization: Bearer <SEU_TOKEN_AQUI>
+  Content-Type: application/json
+Body (raw - JSON):
+{
+  "nome": "João da Silva",
+  "email": "joao.silva@example.com",
+  "data_nascimento": "1995-05-20",
+  "cpf": "12345678900",
+  "genero": "Masculino"
+}
+Resposta esperada (201 Created):
+{
+  "message": "Formulário criado com sucesso"
+}
+
+--- [GET] CONSULTAR FORMULÁRIO ---
+Rota: GET /formularios/<id>
+
+• Teste com Autenticação (Sucesso):
+  URL: http://127.0.0.1:5000/formularios/1
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+  Resposta esperada (200 OK):
+  {
+    "id": 1,
+    "user_id": 1,
     "nome": "João da Silva",
     "email": "joao.silva@example.com",
-    "data_nascimento": "1990-01-01",
+    "data_nascimento": "1995-05-20",
     "cpf": "12345678900",
     "genero": "Masculino"
-}
+  }
 
-Authorization - type - Bearer Token Token exp: [colocar código gerado do login]
+• Teste sem Autenticação (Bloqueio):
+  URL: http://127.0.0.1:5000/formularios/1
+  Headers: (Nenhum cabeçalho de autenticação)
+  Resposta esperada (401 Unauthorized):
+  {
+    "error": "Token de autenticação não fornecido"
+  }
 
+• Teste de Registro Inexistente:
+  URL: http://127.0.0.1:5000/formularios/999
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+  Resposta esperada (404 Not Found):
+  {
+    "error": "Formulário não encontrado"
+  }
+
+--- [PUT] ATUALIZAR FORMULÁRIO ---
+Rota: PUT /formularios/<id>
+
+• Teste com Autenticação (Sucesso):
+  URL: http://127.0.0.1:5000/formularios/1
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+    Content-Type: application/json
+  Body (raw - JSON):
+  {
+    "nome": "João da Silva Sauro",
+    "email": "joao.sauro@example.com",
+    "data_nascimento": "1995-05-20",
+    "cpf": "12345678900",
+    "genero": "Masculino"
+  }
+  Resposta esperada (200 OK):
+  {
+    "message": "Formulário atualizado com sucesso"
+  }
+
+• Teste sem Autenticação (Bloqueio):
+  URL: http://127.0.0.1:5000/formularios/1
+  Headers:
+    Content-Type: application/json
+  Body (raw - JSON):
+  {
+    "nome": "Tentativa Sem Token"
+  }
+  Resposta esperada (401 Unauthorized):
+  {
+    "error": "Token de autenticação não fornecido"
+  }
+
+• Teste de Registro Inexistente:
+  URL: http://127.0.0.1:5000/formularios/999
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+    Content-Type: application/json
+  Body (raw - JSON):
+  {
+    "nome": "Inexistente",
+    "email": "inexistente@example.com"
+  }
+  Resposta esperada (404 Not Found):
+  {
+    "error": "Formulário não encontrado"
+  }
+
+--- [DELETE] EXCLUIR FORMULÁRIO ---
+Rota: DELETE /formularios/<id>
+
+• Teste sem Autenticação (Bloqueio):
+  URL: http://127.0.0.1:5000/formularios/1
+  Headers: (Nenhum cabeçalho de autenticação)
+  Resposta esperada (401 Unauthorized):
+  {
+    "error": "Token de autenticação não fornecido"
+  }
+
+• Teste de Registro Inexistente:
+  URL: http://127.0.0.1:5000/formularios/999
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+  Resposta esperada (404 Not Found):
+  {
+    "error": "Formulário não encontrado"
+  }
+
+• Teste com Autenticação (Sucesso):
+  URL: http://127.0.0.1:5000/formularios/1
+  Headers:
+    Authorization: Bearer <SEU_TOKEN_AQUI>
+  Resposta esperada (200 OK):
+  {
+    "message": "Formulário excluído com sucesso"
+  }
